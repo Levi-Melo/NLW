@@ -15,26 +15,23 @@ server.use(express.urlencoded({ extended: true }))
 //ultilizando tamplete engine
 const nunjucks = require("nunjucks")
 nunjucks.configure("src/views", {
-        express: server,
-        noCache: true
-    })
-    // configurar caminhos
-    //pag inicial
+  express: server,
+  noCache: true
+})
+// configurar caminhos
+//pag inicial
 server.get("/", (req, res) => {
-        return res.render("index.html", { title: "Seu marketplace de coleta de resíduos" })
-    })
-    //create
+  return res.render("index.html", { title: "Seu marketplace de coleta de resíduos" })
+})
+//create
 server.get("/create-point", (req, res) => {
 
-    req.query
-
-
-    return res.render("create-point.html", )
+  return res.render("create-point.html",)
 })
 
 server.post("/savepoint", (req, res) => {
 
-    const query = `
+  const query = `
               INSERT INTO places (
                   image,
                   name,
@@ -45,25 +42,25 @@ server.post("/savepoint", (req, res) => {
                   items
               ) VALUES (?,?,?,?,?,?,?);
           `
-    const values = [
-        req.body.image,
-        req.body.name,
-        req.body.address,
-        req.body.address2,
-        req.body.state,
-        req.body.city,
-        req.body.items
-    ]
+  const values = [
+    req.body.image,
+    req.body.name,
+    req.body.address,
+    req.body.address2,
+    req.body.state,
+    req.body.city,
+    req.body.items
+  ]
 
-    function afterInsertData(err) {
-        if (err) {
-            return console.log(err)
-        }
-        console.log("Cadastrado com sucesso")
-        console.log(this)
-        return res.render("create-point.html", { saved: true })
+  function afterInsertData(err) {
+    if (err) {
+      return console.log(err)
     }
-    db.run(query, values, afterInsertData)
+    console.log("Cadastrado com sucesso")
+    console.log(this)
+    return res.render("create-point.html", { saved: true })
+  }
+  db.run(query, values, afterInsertData)
 
 })
 
@@ -73,20 +70,45 @@ server.post("/savepoint", (req, res) => {
 
 //search
 server.get("/search", (req, res) => {
-    const search = req.query.search
-    if (search == "") {
-        return res.render("search-results.html", { places: rows, total: 0 })
+  const search = req.query.search
+  if (search == "") {
+    return res.render("search-results.html", { total: 0 })
+  }
+  //pegar os dados
+  db.all(`SELECT * FROM places WHERE city LIKE '${search}'`, function (err, rows) {
+    if (err) {
+      return console.log(err)
     }
-    //pegar os dados
-    db.all(`SELECT * FROM places WHERE city LIKE = '%${search}'%`, function(err, rows) {
-        if (err) {
-            return console.log(err)
-        }
-        const total = rows.length
-            //mostrar  a pagina html com os dados do banco de dados
-        return res.render("search-results.html", { places: rows, total })
-    })
+    const total = rows.length
+    //mostrar  a pagina html com os dados do banco de dados
+    return res.render("search-results.html", { places: rows, total })
+  })
+
 })
+
+server.get("/all-points", (req, res) => {
+  // Seleciona todos os dados
+
+  const search = req.query.city
+
+  if (search == "") {
+      return res.render("search-results.html", { total: 0 })
+  }
+
+  db.all(`SELECT * FROM places`, function(err, rows) {
+      if (err) {
+          return console.log(err)
+      }
+      
+      const total = rows.length
+
+      // Página html com os dados do database
+      return res.render("search-results.html", { places: rows, total })
+  })
+})
+
+
+
 
 //ligar o servidor
 server.listen(3000)
